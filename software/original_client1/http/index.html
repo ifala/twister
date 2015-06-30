@@ -1,0 +1,152 @@
+<html>
+	<head>
+		<title>ESP8266 RGB + SERVO</title>
+	</head>
+	<body>
+	
+	SERVO + RGB control via ESP8266 (01) </br> </br>
+	<!-- in the <button> tags below the ID attribute is the value sent to the ATTINY44 -->
+	
+	<button id="rgb_red">RED</button> 
+	<button id="rgb_blue">BLUE</button> 
+	<button id="rgb_green">GREEN</button> 
+	<button id="servo_right">T_right</button>
+	<button id="servo_left">T_left</button>
+
+	<div id="label">Label</div>
+
+	<script type="text/javascript">
+	var commandClient = function(commandID, param, indirizzo) {
+		var url = indirizzo + '/cubetto.lua?id=' + commandID + '&param=' + param;
+		console.log(url);
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.onreadystatechange = processRequest;
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send(null);
+	};
+
+	var ipaddress = ['192.168.4.101', '192.168.4.102', '192.168.4.103'];
+	var ip = ipaddress.length; <!-- da fare interrogazione a DHCP.... -->
+
+
+	for (i = 0; i < ip; i++) {
+		document.write('</br>');
+		document.write('<button id="rgb_red' + ipaddress[i] + '" data-ip="'+ipaddress[i]+'" data-color="1">RED</button>');
+		document.write('<button id="rgb_blue' + ipaddress[i] + '" data-ip="'+ipaddress[i]+'"  data-color="3">BLUE</button>');
+		document.write('<button id="rgb_green' + ipaddress[i] + '" data-ip="'+ipaddress[i]+'" data-color="2">GREEN</button>');
+		document.write('<button id="servo_right' + ipaddress[i] + '" data-ip="'+ipaddress[i]+'" data-angle="1A">T_right</button>');
+		document.write('<button id="servo_left' + ipaddress[i] + '" data-ip="'+ipaddress[i]+'" data-angle="9A">T_left</button>');
+		document.write('</br>');
+
+		document.getElementById("label").innerHTML = '';
+
+		var nipaddress = ipaddress[i];
+
+		var clickLed = function(ev){
+			var ipaddr = ev.target.getAttribute("data-ip");
+			var color = ev.target.getAttribute("data-color");
+			console.log("Set " + color + " to " + ipaddr);
+			commandClient("led", color, ipaddr);
+			
+		};
+		
+		var clickServo = function(ev){
+			var ipaddr = ev.target.getAttribute("data-ip");
+			var angle = ev.target.getAttribute("data-angle");
+			console.log("Set servo" + angle + " to " + ipaddr);
+			commandClient("servo", angle, ipaddr);
+		};
+
+
+		document.getElementById('rgb_red' + nipaddress).addEventListener("click", clickLed);
+		document.getElementById('rgb_blue' + nipaddress).addEventListener("click", clickLed);
+		document.getElementById('rgb_green' + nipaddress).addEventListener("click", clickLed);
+		document.getElementById('servo_left' + nipaddress).addEventListener("click", clickServo);
+		document.getElementById('servo_right' + nipaddress).addEventListener("click", clickServo);
+
+
+	};
+
+	var command = function(commandID, param) {
+		var url = '/cubetto.lua?id=' + commandID + '&param=' + param;
+		console.log(url);
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.onreadystatechange = processRequest;
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send(null);
+	}
+
+
+
+
+
+
+	function processRequest() {
+		if (xmlHttp.readyState == 0) {
+			document.getElementById("label").innerHTML = 'Initalizing...';
+			document.getElementById("label").className = "initalizing";
+		} else if (xmlHttp.readyState == 1) {
+			document.getElementById("label").innerHTML = 'Server connection established.';
+			document.getElementById("label").className = "connection";
+		} else if (xmlHttp.readyState == 2) {
+			document.getElementById("label").innerHTML = 'Request received.';
+			document.getElementById("label").className = "received";
+		} else if (xmlHttp.readyState == 3) {
+			document.getElementById("label").innerHTML = 'Processing request.';
+			document.getElementById("label").className = "processing";
+		} else if (xmlHttp.readyState == 4) {
+			if (xmlHttp.status == 200) {
+				document.getElementById("label").innerHTML = xmlHttp.responseText;
+				document.getElementById("label").className = "ok";
+				sleep(300);
+				document.getElementById("label").className = "start";
+			} else if (xmlHttp.status == 400) {
+				document.getElementById("label").innerHTML = 'Bad request.';
+				document.getElementById("label").className = "bad";
+			}
+		}
+	}
+
+	function sleep(milliseconds) {
+		var start = new Date().getTime();
+		for (var i = 0; i < 1e7; i++) {
+			if ((new Date().getTime() - start) > milliseconds) {
+				break;
+			}
+		}
+	}
+
+	document.getElementById("label").innerHTML = '';
+
+	document.getElementById('rgb_red').addEventListener("click", function() {
+		command("led", "1");
+
+	});
+	document.getElementById('rgb_blue').addEventListener("click", function() {
+		command("led", "3");
+
+	});
+	document.getElementById('rgb_green').addEventListener("click", function() {
+		command("led", "2");
+
+	});
+	document.getElementById('servo_left').addEventListener("click", function() {
+		command("servo", "1A");
+
+	});
+	document.getElementById('servo_right').addEventListener("click", function() {
+		command("servo", "9A");
+
+	});
+
+	<!-- assegnare nuovo id per i tasti lato client -->
+
+
+
+
+
+	<!-- assegnare nuovo id per i tasti lato client -->
+
+	</script>
+	</body>
+</html>
